@@ -2,8 +2,8 @@
 
 ## Purpose
 
-## Coding Language: Python
+**Coding Language:** Python
 
-## Libraries used: tbd
+**Libraries used:** tbd
 
-## Colaborators: tbd
+**Colaborators:** tbd
