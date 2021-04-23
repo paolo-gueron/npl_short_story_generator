@@ -1,6 +1,7 @@
 # Short Story Generator using NLP/Language Modelling
 
-## Purpose
+## Purpose:
+tbd
 
 **Coding Language:** Python
 
