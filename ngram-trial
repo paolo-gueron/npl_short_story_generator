@@ -1,0 +1,127 @@
+#Libraries for importing
+import nltk, re, pprint
+from nltk import word_tokenize
+import os
+import codecs
+os.listdir('.')
+
+#Additional downloads
+nltk.download('punkt')
+nltk.download('stopwords')
+nltk.download('treebank')
+nltk.download('gutenberg')
+nltk.download('genesis')
+nltk.download('inaugural')
+nltk.download('nps_chat')
+nltk.download('webtext')
+
+#First we connect to our drives, where I have stored the training sets
+from google.colab import drive
+drive.mount("/content/drive")
+
+#This is our simplest dataset
+input_corpus='/content/drive/MyDrive/Corpus/TrainingSet.txt'
+
+#you can check it out with this code
+#%less {input_corpus}
+!head -n1 {input_corpus}
+
+#We use codecs to deal with unusual characters
+f = codecs.open(input_corpus, 'r', 'utf-8-sig')
+raw = f.read()
+
+#We then tokenize our file
+tokens= nltk.word_tokenize(raw)
+
+#Make the words lower case, you may argue against this but for now I am using this
+words = [w.lower() for w in tokens]
+
+#We can observe the frequency of each word with this
+freq = nltk.FreqDist(words)
+
+list(freq.keys())[:20]
+freq.most_common(20)
+
+#We then start to create bigrams
+cfreq_2gram = nltk.ConditionalFreqDist(nltk.bigrams(words))
+cfreq_2gram.conditions()[:10]
+
+cprob_2gram = nltk.ConditionalProbDist(cfreq_2gram, nltk.MLEProbDist)
+
+#We can check out the probability of a certain sentence appearing
+def unigram_prob(word):
+    len_text = len(words)
+    return float(freq[word]) / float(len_text)
+
+unigram_prob("once")
+
+unigram_prob("once") * cprob_2gram["once"].prob("upon") * cprob_2gram["upon"].prob("a") * cprob_2gram["a"].prob("time")
+
+#
+word = "once"
+text = ""
+for index in range(20):
+    text += word + " "
+    word = cprob_2gram[ word].generate()
+print(text)
+
+#Trigrams
+def generate_text3(text, initialword, numwords):
+    trigrams = list(nltk.ngrams(text, 3,  pad_right=True, pad_left=True))
+    trigram_pairs = (((w0, w1), w2) for w0, w1, w2 in trigrams) # Adapt the format to use ConditionalFreqDist
+    cpd = nltk.ConditionalProbDist(nltk.ConditionalFreqDist(trigram_pairs), nltk.MLEProbDist)
+
+    word = initialword
+    text = ""
+    for i in range(numwords):
+        w = cpd[(word[i],word[i+1])].generate() 
+        word += [w]
+    
+    print(" ".join(word))
+
+generate_text3(words, ["once", "upon"], 100)
+
+#4-grams
+#4-gram
+def generate_text4(text, initialword, numwords):
+    ngrams = list(nltk.ngrams(text, 4,  pad_right=True, pad_left=True))
+    ngram_pairs = (((w0, w1, w2), w3) for w0, w1, w2, w3 in ngrams)
+    cpd = nltk.ConditionalProbDist(nltk.ConditionalFreqDist(ngram_pairs), nltk.MLEProbDist)
+
+    word = initialword
+    text = ""
+    for i in range(numwords):
+        w = cpd[(word[i],word[i+1], word[i+2])].generate() 
+        word += [w]
+    
+    print(" ".join(word))
+
+generate_text4(words, ["once", "upon", "a"], 100)
+
+from nltk.book import *
+
+#Larger text file
+f2 = codecs.open('/content/drive/MyDrive/Corpus/TrainingSet2.txt', 'r', 'utf-8-sig')
+raw2= f2.read()
+
+tokens2= nltk.word_tokenize(raw2)
+
+words2 = [w.lower() for w in tokens2]
+
+#Let's create a story
+generate_text4(words2, ["once", "upon", "a"], 100)
+
+#Large file of top 20 books
+f3 = codecs.open('/content/drive/MyDrive/Corpus/TrainingSet3.txt', 'r', 'utf-8-sig')
+raw3= f3.read()
+
+#Clean the file manually
+raw3 = (raw3.replace('*', ''))
+raw3 = (raw3.replace('_', ''))
+
+tokens3= nltk.word_tokenize(raw3)
+
+words3 = [w.lower() for w in tokens3]
+
+#generate a story with the large file
+generate_text4(words3, ["once", "upon", "a"], 100)
